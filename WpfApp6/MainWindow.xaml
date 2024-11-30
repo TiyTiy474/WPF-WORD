@@ -7,35 +7,41 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <StackPanel Orientation="Vertical">
-            <ToolBar>
-                <!-- Шрифт -->
-                <ComboBox Name="Font" Width="150" SelectionChanged="Font_SelectionChanged">
-                    <ComboBoxItem>Arial</ComboBoxItem>
-                    <ComboBoxItem>Times New Roman</ComboBoxItem>
-                    <ComboBoxItem>Verdana</ComboBoxItem>
-                </ComboBox>  
-                <!-- Размер шрифта -->
-                <ComboBox Name = "FontSize" Width="60" SelectionChanged="FontSize_SelectionChanged">
-                    <ComboBoxItem>12</ComboBoxItem>
-                    <ComboBoxItem>14</ComboBoxItem>
-                    <ComboBoxItem>16</ComboBoxItem>
-                </ComboBox>
-                <!-- Жирный,курсив,подчеркнутый -->
-                <ToggleButton Name="BoldButton" Click="BoldButton_Click">Жирный</ToggleButton>
-                <ToggleButton Name="ItalicButton" Click="ItalicButton_Click">Курсив</ToggleButton>
-                <ToggleButton Name="UnderlineButton" Click="UnderlineButton_Click">Подчеркутый</ToggleButton>
-                <!-- Выравнивание -->
-                <Button Name="LeftButton" Click="LeftButton_Click">Left</Button>
-                <Button Name="CenterButton" Click="CenterButton_Click">Center</Button>
-                <Button Name="RightButton" Click="RightButton_Click">Right</Button>
-            </ToolBar>
-            <RichTextBox Name="RichTextBox" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,10"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> 
+            <RowDefinition Height="*"/>    
+            <RowDefinition Height="Auto"/> 
+        </Grid.RowDefinitions>
+        
+        <ToolBar Grid.Row="0">
+            <!-- Шрифт -->
+            <ComboBox Name="Font" Width="150" SelectionChanged="Font_SelectionChanged">
+                <ComboBoxItem>Arial</ComboBoxItem>
+                <ComboBoxItem>Times New Roman</ComboBoxItem>
+                <ComboBoxItem>Verdana</ComboBoxItem>
+            </ComboBox>  
+            <!-- Размер шрифта -->
+            <ComboBox Name="FontSize" Width="60" SelectionChanged="FontSize_SelectionChanged">
+                <ComboBoxItem>12</ComboBoxItem>
+                <ComboBoxItem>14</ComboBoxItem>
+                <ComboBoxItem>16</ComboBoxItem>
+            </ComboBox>
+            <!-- Жирный,курсив,подчеркнутый -->
+            <ToggleButton Name="BoldButton" Click="BoldButton_Click">Жирный</ToggleButton>
+            <ToggleButton Name="ItalicButton" Click="ItalicButton_Click">Курсив</ToggleButton>
+            <ToggleButton Name="UnderlineButton" Click="UnderlineButton_Click">Подчеркнутый</ToggleButton>
+            <!-- Выравнивание -->
+            <Button Name="LeftButton" Click="LeftButton_Click">По левому краю</Button>
+            <Button Name="CenterButton" Click="CenterButton_Click">По центру</Button>
+            <Button Name="RightButton" Click="RightButton_Click">По правому краю</Button>
+        </ToolBar>
+        
+        <RichTextBox Name="RichTextBox" Grid.Row="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+        
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,10,0,10">
             <Button Name="FileOpenButton" Content="Открыть файл" Height="30" Width="100" Margin="5" Click="FileOpenButton_Click"/>
             <Button Name="Seal" Content="Печать" Height="30" Width="100" Margin="5" Click="SealFile_Click"/>
             <Button Name="SaveFileButton" Content="Сохранить" Height="30" Width="100" Margin="5" Click="SaveFileButton_Click"/>
         </StackPanel>
-        <TextBox x:Name="FileContentTextBox" Width="400" Height="300" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
     </Grid>
 </Window>
