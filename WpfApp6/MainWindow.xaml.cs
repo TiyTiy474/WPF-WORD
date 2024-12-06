@@ -10,14 +10,18 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Win32; // для использования OpenFileDialog
 using System.IO;
-
+using System.Drawing;
+using System.Drawing.Printing;
 namespace WpfApp6;
 
 partial class MainWindow : Window
 {
     //TODO:изменение шрифта, размер шрифта, жирный курсив подчеркнутый,выравнивание,и чтобы весь текст был на весь лист без колонок
     //TODO: и изменения применялись как в ворде то есть к выделенному тексту
-    
+    //TODO: надо сделать так что все форматирования то есть размер, шрифт,выравнивание,жирный,подчеркнутный,курсив применялись в PDF файле
+    //TODO: спрашивать окно сохранить изменения 
+    //TODO: сделать textbox размером как А4 ~(21х29)
+    //TODO: переделать сохранение и открытие файла - сериализировать и десериализировать через кастомные методы
     private string selectedFilePath;
     public MainWindow()
     {
@@ -27,71 +31,131 @@ partial class MainWindow : Window
     /// <summary>
     /// Открытие и изменение файла
     /// </summary>
-    private void FileOpenButton_Click(object sender, RoutedEventArgs e)
+    private void FileOpenButton_Click(object sender, RoutedEventArgs e) 
     {
-        OpenFileDialog openFileDialog = new OpenFileDialog();
-        if (openFileDialog.ShowDialog() == true)
+    OpenFileDialog openFileDialog = new OpenFileDialog();
+    openFileDialog.Filter = "Максимкины файлики|*.maxim";
+    
+    if (openFileDialog.ShowDialog() == true)
+    {
+        selectedFilePath = openFileDialog.FileName;
+        try
         {
-            selectedFilePath = openFileDialog.FileName;
-            try
+            TextRange textRange = new TextRange(RichTextBox.Document.ContentStart, RichTextBox.Document.ContentEnd);
+            using (FileStream fileStream = new FileStream(selectedFilePath, FileMode.Open))
             {
-                string fileContent = File.ReadAllText(selectedFilePath, Encoding.UTF8);
-                RichTextBox.Document.Blocks.Clear();
-                RichTextBox.Document.Blocks.Add(new Paragraph(new Run(fileContent)));
-                MessageBox.Show($"Выбран файл: {selectedFilePath}");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при чтении файла: {ex.Message}");
+                string extension = System.IO.Path.GetExtension(selectedFilePath).ToLower();
+                switch (extension)
+                {
+                    case ".rtf":
+                        textRange.Load(fileStream, DataFormats.Rtf);
+                        break;
+                    case ".txt":
+                        using (StreamReader reader = new StreamReader(fileStream, Encoding.Default))
+                        {
+                            textRange.Text = reader.ReadToEnd();
+                        }
+                        break;
+                    default:
+                        textRange.Load(fileStream, DataFormats.Rtf);
+                        break;
+                }
             }
         }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Ошибка при открытии файла: {ex.Message}");
+        }
     }
+}
+    
+    private void SetRichTextBoxContent(string text)
+    {
+        FlowDocument document = new FlowDocument(new Paragraph(new Run(text)))
+        {
+            PageWidth = 793.7,
+            PageHeight = 1122.52,
+            ColumnWidth = 793.7,
+            ColumnGap = 0
+        };
 
+        RichTextBox.Document = document;
+    }
     
     /// <summary>
-    /// Сохранения изменения файла 
+    /// Сохранение файла
     /// </summary>
     private void SaveFileButton_Click(object sender, RoutedEventArgs e)
+{
+    if (string.IsNullOrEmpty(selectedFilePath))
     {
-        if (!string.IsNullOrEmpty(selectedFilePath))
+        SaveFileDialog saveFileDialog = new SaveFileDialog();
+        saveFileDialog.Filter = "Максимкины файлики|*.maxim";
+        if (saveFileDialog.ShowDialog() == true)
         {
-            try
-            {
-                TextRange textRange = new TextRange(RichTextBox.Document.ContentStart, RichTextBox.Document.ContentEnd);
-                using (FileStream fileStream = new FileStream(selectedFilePath, FileMode.Create))
-                {
-                    textRange.Save(fileStream, DataFormats.XamlPackage);
-                }
-                MessageBox.Show("Изменения сохранены.");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при сохранении файла: {ex.Message}");
-            }
+            selectedFilePath = saveFileDialog.FileName;
         }
-        else
-        {
-            MessageBox.Show("Нет открытого файла для сохранения.");
-        }
+        else return;
     }
-
+    try
+    {
+        TextRange textRange = new TextRange(RichTextBox.Document.ContentStart, RichTextBox.Document.ContentEnd);
+        using (FileStream fileStream = new FileStream(selectedFilePath, FileMode.Create))
+        {
+            string extension = System.IO.Path.GetExtension(selectedFilePath).ToLower();
+            switch (extension)
+            {
+                case ".rtf":
+                    textRange.Save(fileStream, DataFormats.Rtf);
+                    break;
+                case ".txt":
+                    using (StreamWriter writer = new StreamWriter(fileStream, Encoding.Default))
+                    {
+                        writer.Write(textRange.Text);
+                    }
+                    break;
+                default:
+                    textRange.Save(fileStream, DataFormats.Rtf);
+                    break;
+            }
+        }
+        MessageBox.Show("Файл успешно сохранен");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"Ошибка при сохранении файла: {ex.Message}");
+    }
+}
     
     /// <summary>
-    /// Печать и сохранение в PDF файл 
+    /// печать файла
     /// </summary>
     private void SealFile_Click(object sender, RoutedEventArgs e)
+{
+    PrintDialog printDialog = new PrintDialog();
+    if (printDialog.ShowDialog() == true)
     {
-        PrintDialog printDialog = new PrintDialog();
+        FlowDocument flowDocument = new FlowDocument();
+        TextRange sourceRange = new TextRange(RichTextBox.Document.ContentStart, RichTextBox.Document.ContentEnd);
+        TextRange targetRange = new TextRange(flowDocument.ContentStart, flowDocument.ContentEnd);
 
-        if (printDialog.ShowDialog() == true)
+        using (MemoryStream ms = new MemoryStream())
         {
-            FlowDocument flowDocument = new FlowDocument(new Paragraph(new Run(new TextRange(RichTextBox.Document.ContentStart, RichTextBox.Document.ContentEnd).Text)));
-            flowDocument.ColumnWidth = double.MaxValue;
-
-            IDocumentPaginatorSource idpSource = flowDocument;
-            printDialog.PrintDocument(idpSource.DocumentPaginator, "Печать документа");
+            sourceRange.Save(ms, DataFormats.Rtf);
+            ms.Seek(0, SeekOrigin.Begin);
+            targetRange.Load(ms, DataFormats.Rtf);
         }
+
+        flowDocument.PageWidth = printDialog.PrintableAreaWidth;
+        flowDocument.PageHeight = printDialog.PrintableAreaHeight;
+        flowDocument.PagePadding = new Thickness(40);
+        flowDocument.ColumnWidth = double.MaxValue;
+
+        IDocumentPaginatorSource idpSource = flowDocument;
+        printDialog.PrintDocument(idpSource.DocumentPaginator, "Печать документа");
     }
+}
+    
     /// <summary>
     /// Шрифты
     /// </summary>
