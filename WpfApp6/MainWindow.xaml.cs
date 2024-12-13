@@ -8,26 +8,28 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Microsoft.Win32; // для использования OpenFileDialog
+using Microsoft.Win32; 
 using System.IO;
 using System.Drawing;
 using System.Drawing.Printing;
+using System.ComponentModel;
 namespace WpfApp6;
 
 partial class MainWindow : Window
 {
-    //TODO:изменение шрифта, размер шрифта, жирный курсив подчеркнутый,выравнивание,и чтобы весь текст был на весь лист без колонок
+    //TODO: изменение шрифта, размер шрифта, жирный курсив подчеркнутый,выравнивание,и чтобы весь текст был на весь лист без колонок-сделано
     //TODO: и изменения применялись как в ворде то есть к выделенному тексту
     //TODO: надо сделать так что все форматирования то есть размер, шрифт,выравнивание,жирный,подчеркнутный,курсив применялись в PDF файле
-    //TODO: спрашивать окно сохранить изменения 
-    //TODO: сделать textbox размером как А4 ~(21х29)
-    //TODO: переделать сохранение и открытие файла - сериализировать и десериализировать через кастомные методы
+    //TODO: спрашивать окно сохранить изменения  
+    //TODO: сделать textbox размером как А4 ~(21х29) - сделано
+    //TODO: переделать сохранение и открытие файла - сериализировать и десериализировать через кастомные методы - сделано
+    //TODO: добавить все шрифты и все размеры шрифтов - сделано
+    //TODO: масштабирование с помощью колесика то есть ctrl + колесико вверх больше, колесико вниз меньше 
     private string selectedFilePath;
     public MainWindow()
     {
         InitializeComponent();
     }
-    
     /// <summary>
     /// Открытие и изменение файла
     /// </summary>
@@ -68,20 +70,6 @@ partial class MainWindow : Window
         }
     }
 }
-    
-    private void SetRichTextBoxContent(string text)
-    {
-        FlowDocument document = new FlowDocument(new Paragraph(new Run(text)))
-        {
-            PageWidth = 793.7,
-            PageHeight = 1122.52,
-            ColumnWidth = 793.7,
-            ColumnGap = 0
-        };
-
-        RichTextBox.Document = document;
-    }
-    
     /// <summary>
     /// Сохранение файла
     /// </summary>
@@ -126,7 +114,6 @@ partial class MainWindow : Window
         MessageBox.Show($"Ошибка при сохранении файла: {ex.Message}");
     }
 }
-    
     /// <summary>
     /// печать файла
     /// </summary>
@@ -155,6 +142,40 @@ partial class MainWindow : Window
         printDialog.PrintDocument(idpSource.DocumentPaginator, "Печать документа");
     }
 }
+    /// <summary>
+    /// диалоговое окно
+    /// </summary>
+    private void SaveChanges()
+    {
+        MessageBoxResult result = MessageBox.Show(
+            "Сохранить изменения?",
+            "Максимкин текстовый редактор",
+            MessageBoxButton.YesNoCancel,
+            MessageBoxImage.Question);
+
+        switch (result)
+        {
+            case MessageBoxResult.Yes:
+                SaveFileButton_Click(this, new RoutedEventArgs());
+                break;
+            case MessageBoxResult.No:
+                break;
+            case MessageBoxResult.Cancel:
+                break;
+        }
+    } 
+    /// <summary>
+    /// диалоговое окно
+    /// </summary>
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        TextRange textRange = new TextRange(RichTextBox.Document.ContentStart, RichTextBox.Document.ContentEnd);
+    
+        if (!string.IsNullOrEmpty(textRange.Text.Trim()))
+        {
+            SaveChanges();
+        }
+    }
     
     /// <summary>
     /// Шрифты
@@ -166,7 +187,6 @@ partial class MainWindow : Window
             RichTextBox.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, ((ComboBoxItem)Font.SelectedItem).Content);
         }
     }
-    
     /// <summary>
     /// Размер шрифта
     /// </summary>
@@ -177,7 +197,6 @@ partial class MainWindow : Window
             RichTextBox.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, Convert.ToDouble(((ComboBoxItem)FontSize.SelectedItem).Content));
         }
     }
-    
     /// <summary>
     /// жирный шрифт
     /// </summary>
@@ -185,7 +204,6 @@ partial class MainWindow : Window
     {
         EditingCommands.ToggleBold.Execute(null, RichTextBox);
     }
-    
     /// <summary>
     /// курсивный шрифт
     /// </summary>
@@ -193,7 +211,6 @@ partial class MainWindow : Window
     {
         EditingCommands.ToggleItalic.Execute(null, RichTextBox);
     }
-    
     /// <summary>
     /// подчеркунтый шрифт
     /// </summary>
@@ -201,7 +218,6 @@ partial class MainWindow : Window
     {
         EditingCommands.ToggleUnderline.Execute(null, RichTextBox);
     }
-    
     /// <summary>
     /// выравнивание по левому краю 
     /// </summary>
@@ -212,7 +228,6 @@ partial class MainWindow : Window
             RichTextBox.Selection.ApplyPropertyValue(Paragraph.TextAlignmentProperty, TextAlignment.Left);
         }
     }
-    
     /// <summary>
     /// выравнивание по центру
     /// </summary>
@@ -222,8 +237,7 @@ partial class MainWindow : Window
         {
             RichTextBox.Selection.ApplyPropertyValue(Paragraph.TextAlignmentProperty, TextAlignment.Center);
         }
-    } 
-    
+    }
     /// <summary>
     /// выравнивание по правому краю
     /// </summary>
